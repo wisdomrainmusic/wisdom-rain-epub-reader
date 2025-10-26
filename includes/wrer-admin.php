@@ -39,15 +39,6 @@ class WRER_Admin
 
         add_submenu_page(
             'wrer-overview',
-            'Manage Readers',
-            'Manage Readers',
-            'manage_options',
-            'wrer-manage-readers',
-            [$this, 'placeholder_page']
-        );
-
-        add_submenu_page(
-            'wrer-overview',
             'Manage Categories',
             'Manage Categories',
             'manage_options',

@@ -40,5 +40,6 @@ add_action('plugins_loaded', function () {
 add_action('plugins_loaded', function () {
     if (is_admin()) {
         new WRER_Admin();
+        new WRER_Admin_Readers();
     }
 });
