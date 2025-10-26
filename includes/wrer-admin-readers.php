@@ -45,63 +45,77 @@ class WRER_Admin_Readers
 
         $create_nonce = wp_create_nonce('wrer_create_reader');
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Manage Readers', 'wrer') . '</h1>';
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-        echo '<input type="hidden" name="action" value="wrer_create_reader">';
-        echo '<input type="hidden" name="wrer_reader_nonce" value="' . esc_attr($create_nonce) . '">';
-        echo '<label class="screen-reader-text" for="wrer-reader-name">' . esc_html__('Reader name', 'wrer') . '</label>';
-        echo '<input type="text" id="wrer-reader-name" name="reader_name" placeholder="' . esc_attr__('Reader name', 'wrer') . '" required> ';
-        echo '<label class="screen-reader-text" for="wrer-reader-slug">' . esc_html__('Reader slug', 'wrer') . '</label>';
-        echo '<input type="text" id="wrer-reader-slug" name="reader_slug" placeholder="' . esc_attr__('Slug (optional)', 'wrer') . '"> ';
-        submit_button(__('Create Reader', 'wrer'), 'primary', '', false);
-        echo '</form><hr>';
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html__('Manage Readers', 'wrer'); ?></h1>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="wrer_create_reader">
+                <input type="hidden" name="wrer_reader_nonce" value="<?php echo esc_attr($create_nonce); ?>">
+                <label class="screen-reader-text" for="wrer-reader-name"><?php esc_html_e('Reader name', 'wrer'); ?></label>
+                <input type="text" id="wrer-reader-name" name="reader_name" placeholder="<?php echo esc_attr__('Reader name', 'wrer'); ?>" required>
+                <label class="screen-reader-text" for="wrer-reader-slug"><?php esc_html_e('Reader slug', 'wrer'); ?></label>
+                <input type="text" id="wrer-reader-slug" name="reader_slug" placeholder="<?php echo esc_attr__('Slug (optional)', 'wrer'); ?>">
+                <?php submit_button(__('Create Reader', 'wrer'), 'primary', '', false); ?>
+            </form>
+            <hr>
+        <?php
 
         if (empty($readers)) {
-            echo '<p>' . esc_html__('No readers found.', 'wrer') . '</p></div>';
+            echo '<p>' . esc_html__('No readers found.', 'wrer') . '</p>';
+            echo '</div>';
             return;
         }
 
-        echo '<table class="widefat fixed striped">';
-        echo '<thead><tr>'
-            . '<th>' . esc_html__('Name', 'wrer') . '</th>'
-            . '<th>' . esc_html__('Slug', 'wrer') . '</th>'
-            . '<th>' . esc_html__('Books', 'wrer') . '</th>'
-            . '<th>' . esc_html__('Actions', 'wrer') . '</th>'
-            . '</tr></thead><tbody>';
-
-        foreach ($readers as $reader) {
-            $id = isset($reader['id']) ? $reader['id'] : '';
-            $nonce_rename = wp_create_nonce('wrer_rename_reader_' . $id);
-
-            $name = isset($reader['name']) ? $reader['name'] : '';
-            $slug = isset($reader['slug']) ? $reader['slug'] : '';
-            $books = isset($reader['books']) && is_array($reader['books']) ? count($reader['books']) : 0;
-
-            $edit_url = admin_url('admin.php?page=wrer-edit-reader&id=' . rawurlencode($id));
-            $delete_url = wp_nonce_url(admin_url('admin-post.php?action=wrer_delete_reader&id=' . rawurlencode($id)), 'wrer_delete_reader_' . $id);
-            $duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=wrer_duplicate_reader&id=' . rawurlencode($id)), 'wrer_duplicate_reader_' . $id);
-
-            echo '<tr>'
-                . '<td><strong>' . esc_html($name) . '</strong></td>'
-                . '<td>' . esc_html($slug) . '</td>'
-                . '<td>' . intval($books) . '</td>'
-                . '<td>'
-                . '<a href="' . esc_url($edit_url) . '">' . esc_html__('Edit Books', 'wrer') . '</a> | '
-                . '<a href="' . esc_url($duplicate_url) . '">' . esc_html__('Duplicate', 'wrer') . '</a> | '
-                . '<a href="#" class="wrer-rename" data-id="' . esc_attr($id) . '" data-nonce="' . esc_attr($nonce_rename) . '">' . esc_html__('Rename', 'wrer') . '</a> | '
-                . '<a href="' . esc_url($delete_url) . '" class="wrer-delete" data-name="' . esc_attr($name) . '">' . esc_html__('Delete', 'wrer') . '</a>'
-                . '</td>'
-                . '</tr>';
-        }
-
-        echo '</tbody></table>';
-        echo '</div>';
         ?>
+            <table class="widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th><?php esc_html_e('Name', 'wrer'); ?></th>
+                        <th><?php esc_html_e('Slug', 'wrer'); ?></th>
+                        <th><?php esc_html_e('Books', 'wrer'); ?></th>
+                        <th><?php esc_html_e('Shortcode', 'wrer'); ?></th>
+                        <th><?php esc_html_e('Actions', 'wrer'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($readers as $reader) :
+                    $id = isset($reader['id']) ? $reader['id'] : '';
+                    $nonce_rename = wp_create_nonce('wrer_rename_reader_' . $id);
+
+                    $name = isset($reader['name']) ? $reader['name'] : '';
+                    $slug = isset($reader['slug']) ? $reader['slug'] : '';
+                    $books = isset($reader['books']) && is_array($reader['books']) ? count($reader['books']) : 0;
+                    $shortcode = sprintf('[wrer_reader id="%s"]', $id);
+
+                    $edit_url = admin_url('admin.php?page=wrer-edit-reader&id=' . rawurlencode($id));
+                    $delete_url = wp_nonce_url(admin_url('admin-post.php?action=wrer_delete_reader&id=' . rawurlencode($id)), 'wrer_delete_reader_' . $id);
+                    $duplicate_url = wp_nonce_url(admin_url('admin-post.php?action=wrer_duplicate_reader&id=' . rawurlencode($id)), 'wrer_duplicate_reader_' . $id);
+                    ?>
+                    <tr>
+                        <td><strong><?php echo esc_html($name); ?></strong></td>
+                        <td><?php echo esc_html($slug); ?></td>
+                        <td><?php echo intval($books); ?></td>
+                        <td>
+                            <input type="text" readonly value="<?php echo esc_attr($shortcode); ?>" class="wrer-shortcode-field" style="width:250px;">
+                            <button class="button wrer-copy-btn" data-code="<?php echo esc_attr($shortcode); ?>"><?php esc_html_e('Copy', 'wrer'); ?></button>
+                        </td>
+                        <td>
+                            <a href="<?php echo esc_url($edit_url); ?>"><?php esc_html_e('Edit Books', 'wrer'); ?></a> |
+                            <a href="<?php echo esc_url($duplicate_url); ?>"><?php esc_html_e('Duplicate', 'wrer'); ?></a> |
+                            <a href="#" class="wrer-rename" data-id="<?php echo esc_attr($id); ?>" data-nonce="<?php echo esc_attr($nonce_rename); ?>"><?php esc_html_e('Rename', 'wrer'); ?></a> |
+                            <a href="<?php echo esc_url($delete_url); ?>" class="wrer-delete" data-name="<?php echo esc_attr($name); ?>"><?php esc_html_e('Delete', 'wrer'); ?></a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <script>
         document.addEventListener('DOMContentLoaded', () => {
             const deleteMessage = <?php echo wp_json_encode(__('Delete this reader?', 'wrer')); ?>;
             const deleteMessageNamed = <?php echo wp_json_encode(__('Delete the reader "%s"?', 'wrer')); ?>;
+            const copyLabel = <?php echo wp_json_encode(__('Copy', 'wrer')); ?>;
+            const copiedLabel = <?php echo wp_json_encode(__('Copied!', 'wrer')); ?>;
 
             document.querySelectorAll('.wrer-delete').forEach(link => {
                 link.addEventListener('click', event => {
@@ -151,6 +165,50 @@ class WRER_Admin_Readers
 
                     document.body.appendChild(form);
                     form.submit();
+                });
+            });
+
+            const showCopiedState = btn => {
+                btn.textContent = copiedLabel;
+                btn.disabled = true;
+                setTimeout(() => {
+                    btn.textContent = copyLabel;
+                    btn.disabled = false;
+                }, 1500);
+            };
+
+            document.querySelectorAll('.wrer-copy-btn').forEach(btn => {
+                btn.addEventListener('click', event => {
+                    event.preventDefault();
+                    const code = btn.dataset.code || '';
+                    if (!code) {
+                        return;
+                    }
+
+                    const copyPromise = navigator.clipboard && navigator.clipboard.writeText
+                        ? navigator.clipboard.writeText(code)
+                        : Promise.reject();
+
+                    copyPromise
+                        .then(() => {
+                            showCopiedState(btn);
+                        })
+                        .catch(() => {
+                            const tempInput = document.createElement('textarea');
+                            tempInput.value = code;
+                            tempInput.setAttribute('readonly', 'readonly');
+                            tempInput.style.position = 'fixed';
+                            tempInput.style.opacity = '0';
+                            document.body.appendChild(tempInput);
+                            tempInput.select();
+                            try {
+                                document.execCommand('copy');
+                                showCopiedState(btn);
+                            } catch (err) {
+                                // Ignore copy errors silently.
+                            }
+                            document.body.removeChild(tempInput);
+                        });
                 });
             });
         });
