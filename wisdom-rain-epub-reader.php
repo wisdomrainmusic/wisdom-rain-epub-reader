@@ -49,4 +49,13 @@ add_action('plugins_loaded', function () {
         new WRER_Admin_Categories();
         new WRER_Admin_Edit();
     }
+
+    require_once WRER_PATH . 'includes/wrer-renderer.php';
+});
+
+// Initialize frontend renderer.
+add_action('init', function () {
+    if (!is_admin()) {
+        new WRER_Renderer();
+    }
 });
