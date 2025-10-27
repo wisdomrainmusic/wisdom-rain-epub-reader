@@ -4,20 +4,8 @@ if (!defined('ABSPATH')) exit;
 class WRER_Admin_Categories {
 
     public function __construct() {
-        add_action('admin_menu', [$this, 'add_submenu']);
         add_action('admin_post_wrer_add_category', [$this, 'add_category']);
         add_action('admin_post_wrer_delete_category', [$this, 'delete_category']);
-    }
-
-    public function add_submenu() {
-        add_submenu_page(
-            'wrer-overview',
-            'Manage Categories',
-            'Manage Categories',
-            'manage_options',
-            'wrer-manage-categories',
-            [$this, 'render_page']
-        );
     }
 
     public function render_page() {
@@ -70,14 +58,14 @@ class WRER_Admin_Categories {
         // Duplicate kontrolü
         foreach ($categories as $c) {
             if ($c['slug'] === $slug) {
-                wp_redirect(admin_url('admin.php?page=wrer-manage-categories&exists=1'));
+                wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&exists=1'));
                 exit;
             }
         }
 
         $categories[] = ['name' => $name, 'slug' => $slug];
         update_option('wrer_categories', $categories);
-        wp_redirect(admin_url('admin.php?page=wrer-manage-categories&added=1'));
+        wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&added=1'));
         exit;
     }
 
@@ -87,7 +75,7 @@ class WRER_Admin_Categories {
         $categories = get_option('wrer_categories', []);
         $categories = array_filter($categories, fn($c) => $c['slug'] !== $slug);
         update_option('wrer_categories', $categories);
-        wp_redirect(admin_url('admin.php?page=wrer-manage-categories&deleted=1'));
+        wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&deleted=1'));
         exit;
     }
 }
