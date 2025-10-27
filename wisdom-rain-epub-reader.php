@@ -52,10 +52,3 @@ add_action('plugins_loaded', function () {
 
     require_once WRER_PATH . 'includes/wrer-renderer.php';
 });
-
-// Initialize frontend renderer.
-add_action('init', function () {
-    if (!is_admin()) {
-        new WRER_Renderer();
-    }
-});
