@@ -93,30 +93,16 @@ if (is_array($first_book)) {
         <?php endforeach; ?>
     </div>
 
-    <div class="wrer-reader-wrapper" id="wrer-reader-shell">
-        <div class="wrer-reader-toolbar">
-            <button type="button" id="wrer-prev" class="wrer-btn" aria-label="<?php esc_attr_e('Previous page', 'wrer'); ?>">⬅</button>
-            <span id="wrer-progress" class="wrer-progress-text"><?php esc_html_e('Page 1', 'wrer'); ?></span>
-            <button type="button" id="wrer-next" class="wrer-btn" aria-label="<?php esc_attr_e('Next page', 'wrer'); ?>">➡</button>
-            <button type="button" id="wrer-bookmark" class="wrer-btn" aria-label="<?php esc_attr_e('Add bookmark', 'wrer'); ?>">🔖</button>
-            <button type="button" id="wrer-fullscreen" class="wrer-btn" aria-label="<?php esc_attr_e('Toggle fullscreen', 'wrer'); ?>">⛶</button>
-        </div>
+    <div
+        id="wrer-reader-view"
+        data-reader-id="<?php echo esc_attr($reader_id); ?>"
+        data-epub-url="<?php echo esc_url($first_epub ? $first_epub : 'https://wisdomrain-audio.b-cdn.net/The%20Science%20of%20Mindfulness%20-%20Simple%20Tools%20for%20Modern%20Living.epub'); ?>"
+        style="width:100%;max-width:900px;height:600px;margin:auto;border:2px solid #d00;border-radius:10px;overflow:hidden;"
+    ></div>
 
-        <div id="wrer-reader" class="wrer-reader-area" aria-live="polite"></div>
-
-        <div
-            id="wrer-resume-popup"
-            class="wrer-resume hidden"
-            role="alertdialog"
-            aria-labelledby="wrer-resume-message"
-            aria-modal="true"
-        >
-            <p id="wrer-resume-message"><?php esc_html_e('Continue from where you left off?', 'wrer'); ?></p>
-            <div class="wrer-resume-actions">
-                <button type="button" id="wrer-resume-yes" class="wrer-resume-btn wrer-resume-btn--primary"><?php esc_html_e('Yes', 'wrer'); ?></button>
-                <button type="button" id="wrer-resume-no" class="wrer-resume-btn wrer-resume-btn--secondary"><?php esc_html_e('Start Over', 'wrer'); ?></button>
-            </div>
-        </div>
+    <div style="text-align:center;margin-top:15px;">
+        <button id="prev" class="wrer-btn">⬅️ Prev</button>
+        <button id="next" class="wrer-btn">Next ➡️</button>
     </div>
 </div>
 
