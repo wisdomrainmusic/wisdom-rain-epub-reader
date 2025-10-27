@@ -21,111 +21,164 @@ class WRER_Admin_Categories {
     }
 
     public function render_page() {
-        if (!current_user_can('manage_options')) return;
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         $categories = get_option('wrer_categories', []);
-        if (!is_array($categories)) $categories = [];
-
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Manage Categories', 'wrer') . '</h1>';
-
-        if (isset($_GET['added'])) {
-            echo '<div class="notice notice-success"><p>' . esc_html__('Category added.', 'wrer') . '</p></div>';
-        }
-        if (isset($_GET['deleted'])) {
-            echo '<div class="notice notice-success"><p>' . esc_html__('Category deleted.', 'wrer') . '</p></div>';
-        }
-        if (isset($_GET['exists'])) {
-            echo '<div class="notice notice-warning"><p>' . esc_html__('Category already exists.', 'wrer') . '</p></div>';
-        }
-        if (isset($_GET['error'])) {
-            $message = '';
-            if (sanitize_text_field($_GET['error']) === 'invalid_nonce') {
-                $message = esc_html__('Action could not be verified. Please try again.', 'wrer');
-            }
-            if ($message) {
-                echo '<div class="notice notice-error"><p>' . $message . '</p></div>';
-            }
+        if (!is_array($categories)) {
+            $decoded = json_decode($categories, true);
+            $categories = is_array($decoded) ? $decoded : [];
         }
 
-        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-        echo '<input type="hidden" name="action" value="wrer_add_category">';
-        wp_nonce_field('wrer_add_category_action', 'wrer_nonce');
-        echo '<label class="screen-reader-text" for="wrer-category-name">' . esc_html__('Category name', 'wrer') . '</label>';
-        echo '<input type="text" id="wrer-category-name" name="category_name" placeholder="' . esc_attr__('Add new category', 'wrer') . '" required> ';
-        submit_button(__('Add Category', 'wrer'), 'primary', '', false);
-        echo '</form><hr>';
+        ?>
+        <div class="wrap">
+            <h1><?php esc_html_e('Manage Categories', 'wrer'); ?></h1>
 
-        if (empty($categories)) {
-            echo '<p>' . esc_html__('No categories defined yet.', 'wrer') . '</p>';
-        } else {
-            echo '<table class="widefat fixed striped"><thead>';
-            echo '<tr><th>' . esc_html__('Name', 'wrer') . '</th><th>' . esc_html__('Slug', 'wrer') . '</th><th>' . esc_html__('Actions', 'wrer') . '</th></tr>';
-            echo '</thead><tbody>';
-            foreach ($categories as $cat) {
-                $name = isset($cat['name']) ? esc_html($cat['name']) : '';
-                $raw_slug = isset($cat['slug']) ? $cat['slug'] : '';
-                $slug = esc_html($raw_slug);
-                $delete_url = wp_nonce_url(
-                    add_query_arg(
-                        [
-                            'action' => 'wrer_delete_category',
-                            'slug'   => $raw_slug,
-                        ],
-                        admin_url('admin-post.php')
-                    ),
-                    'wrer_delete_category_action',
-                    'wrer_nonce'
-                );
-                echo '<tr>';
-                echo '<td>' . $name . '</td>';
-                echo '<td>' . $slug . '</td>';
-                echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(' . wp_json_encode(__('Delete this category?', 'wrer')) . ')">' . esc_html__('Delete', 'wrer') . '</a></td>';
-                echo '</tr>';
-            }
-            echo '</tbody></table>';
-        }
+            <?php if (isset($_GET['added'])) : ?>
+                <div class="notice notice-success"><p><?php esc_html_e('✅ Category added successfully.', 'wrer'); ?></p></div>
+            <?php elseif (isset($_GET['deleted'])) : ?>
+                <div class="notice notice-warning"><p><?php esc_html_e('🗑️ Category deleted successfully.', 'wrer'); ?></p></div>
+            <?php elseif (isset($_GET['exists'])) : ?>
+                <div class="notice notice-error"><p><?php esc_html_e('⚠️ This category already exists.', 'wrer'); ?></p></div>
+            <?php endif; ?>
 
-        echo '</div>';
+            <?php if (isset($_GET['error'])) :
+                $error = sanitize_text_field(wp_unslash($_GET['error']));
+                $message = '';
+                if ('invalid_nonce' === $error) {
+                    $message = __('Action could not be verified. Please try again.', 'wrer');
+                }
+                if ($message) : ?>
+                <div class="notice notice-error"><p><?php echo esc_html($message); ?></p></div>
+            <?php endif; endif; ?>
+
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="wrer_add_category">
+                <?php wp_nonce_field('wrer_add_category_action', 'wrer_nonce'); ?>
+                <label class="screen-reader-text" for="wrer-category-name"><?php esc_html_e('Category name', 'wrer'); ?></label>
+                <input
+                    type="text"
+                    id="wrer-category-name"
+                    name="category_name"
+                    placeholder="<?php esc_attr_e('Add new category', 'wrer'); ?>"
+                    required
+                >
+                <?php submit_button(__('Add Category', 'wrer'), 'primary', '', false); ?>
+            </form>
+
+            <hr>
+
+            <?php if (empty($categories)) : ?>
+                <p><?php esc_html_e('No categories defined yet.', 'wrer'); ?></p>
+            <?php else : ?>
+                <table class="widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th><?php esc_html_e('Name', 'wrer'); ?></th>
+                            <th><?php esc_html_e('Slug', 'wrer'); ?></th>
+                            <th><?php esc_html_e('Actions', 'wrer'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($categories as $cat) :
+                            $name = isset($cat['name']) ? $cat['name'] : '';
+                            $raw_slug = isset($cat['slug']) ? $cat['slug'] : '';
+                            $delete_url = wp_nonce_url(
+                                add_query_arg(
+                                    [
+                                        'action' => 'wrer_delete_category',
+                                        'slug'   => $raw_slug,
+                                    ],
+                                    admin_url('admin-post.php')
+                                ),
+                                'wrer_delete_category_action',
+                                'wrer_nonce'
+                            );
+                            ?>
+                            <tr>
+                                <td><?php echo esc_html($name); ?></td>
+                                <td><?php echo esc_html($raw_slug); ?></td>
+                                <td>
+                                    <a
+                                        href="<?php echo esc_url($delete_url); ?>"
+                                        onclick="return confirm(<?php echo wp_json_encode(__('Delete this category?', 'wrer')); ?>)"
+                                    >
+                                        <?php esc_html_e('Delete', 'wrer'); ?>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        <?php
     }
 
     public function add_category() {
-        if (!current_user_can('manage_options')) wp_die('Access denied');
-
-        if (!isset($_POST['wrer_nonce']) || !wp_verify_nonce($_POST['wrer_nonce'], 'wrer_add_category_action')) {
-            wp_die('Action could not be verified. Please try again.');
+        if (!current_user_can('manage_options')) {
+            wp_die('Access denied.');
         }
 
-        $name = sanitize_text_field($_POST['category_name']);
+        $nonce = isset($_POST['wrer_nonce']) ? wp_unslash($_POST['wrer_nonce']) : '';
+        if (!$nonce || !wp_verify_nonce($nonce, 'wrer_add_category_action')) {
+            wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&error=invalid_nonce'));
+            exit;
+        }
+
+        $name = isset($_POST['category_name']) ? sanitize_text_field(wp_unslash($_POST['category_name'])) : '';
         $slug = sanitize_title($name);
 
         $categories = get_option('wrer_categories', []);
-        if (!is_array($categories)) $categories = [];
+        if (!is_array($categories)) {
+            $decoded = json_decode($categories, true);
+            $categories = is_array($decoded) ? $decoded : [];
+        }
 
-        // Duplicate kontrolü
         foreach ($categories as $c) {
-            if ($c['slug'] === $slug) {
+            if (isset($c['slug']) && $c['slug'] === $slug) {
                 wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&exists=1'));
                 exit;
             }
         }
 
-        $categories[] = ['name' => $name, 'slug' => $slug];
+        $categories[] = [
+            'name' => $name,
+            'slug' => $slug,
+        ];
         update_option('wrer_categories', $categories);
+
         wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&added=1'));
         exit;
     }
 
     public function delete_category() {
-        if (!current_user_can('manage_options')) wp_die('Access denied');
-
-        if (!isset($_GET['wrer_nonce']) || !wp_verify_nonce($_GET['wrer_nonce'], 'wrer_delete_category_action')) {
-            wp_die('Action could not be verified. Please try again.');
+        if (!current_user_can('manage_options')) {
+            wp_die('Access denied.');
         }
 
-        $slug = sanitize_text_field($_GET['slug']);
+        $nonce = isset($_GET['wrer_nonce']) ? wp_unslash($_GET['wrer_nonce']) : '';
+        if (!$nonce || !wp_verify_nonce($nonce, 'wrer_delete_category_action')) {
+            wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&error=invalid_nonce'));
+            exit;
+        }
+
+        $slug = isset($_GET['slug']) ? sanitize_text_field(wp_unslash($_GET['slug'])) : '';
         $categories = get_option('wrer_categories', []);
-        $categories = array_filter($categories, fn($c) => $c['slug'] !== $slug);
-        update_option('wrer_categories', $categories);
+        if (!is_array($categories)) {
+            $decoded = json_decode($categories, true);
+            $categories = is_array($decoded) ? $decoded : [];
+        }
+
+        $categories = array_filter(
+            $categories,
+            static function ($c) use ($slug) {
+                return isset($c['slug']) && $c['slug'] !== $slug;
+            }
+        );
+
+        update_option('wrer_categories', array_values($categories));
         wp_safe_redirect(admin_url('admin.php?page=wrer-manage-categories&deleted=1'));
         exit;
     }
