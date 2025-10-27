@@ -37,14 +37,6 @@ class WRER_Admin
             [$this, 'overview_page']
         );
 
-        add_submenu_page(
-            'wrer-overview',
-            'Manage Categories',
-            'Manage Categories',
-            'manage_options',
-            'wrer-manage-categories',
-            [$this, 'placeholder_page']
-        );
     }
 
     public function overview_page(): void

@@ -40,6 +40,13 @@ add_action('plugins_loaded', function () {
 add_action('plugins_loaded', function () {
     if (is_admin()) {
         new WRER_Admin();
+
+        require_once WRER_PATH . 'includes/wrer-admin-readers.php';
+        require_once WRER_PATH . 'includes/wrer-admin-categories.php';
+        require_once WRER_PATH . 'includes/wrer-admin-edit.php';
+
         new WRER_Admin_Readers();
+        new WRER_Admin_Categories();
+        new WRER_Admin_Edit();
     }
 });
