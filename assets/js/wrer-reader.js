@@ -1,3 +1,7 @@
+document.addEventListener("DOMContentLoaded", function () {
+  console.log("WRER EPUB Reader initialized after DOM is ready.");
+});
+
 (function () {
   "use strict";
 
