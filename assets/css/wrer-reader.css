@@ -1,0 +1,56 @@
+.wrer-reader-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  font-family: "Inter", sans-serif;
+  color: #000;
+}
+
+.wrer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e60000;
+  margin-bottom: 20px;
+}
+
+.wrer-buy-btn {
+  background: #e60000;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.wrer-language-filter {
+  margin-bottom: 15px;
+}
+
+.wrer-books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.wrer-book {
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.wrer-book img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.wrer-epub-area {
+  border: 2px dashed rgba(0,0,0,0.1);
+  border-radius: 10px;
+  padding: 30px;
+  margin-top: 15px;
+  color: #555;
+  font-style: italic;
+}
