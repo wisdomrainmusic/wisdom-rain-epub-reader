@@ -26,7 +26,7 @@ function wrer_register_reader_assets(): void
     wp_register_script(
         'wrer-reader',
         WRER_URL . 'assets/js/wrer-reader.js',
-        ['wrer-epubjs'],
+        ['jquery', 'wrer-epubjs'],
         WRER_VERSION,
         true
     );
