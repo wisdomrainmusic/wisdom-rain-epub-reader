@@ -82,6 +82,7 @@ if (is_array($first_book)) {
                         data-title="<?php echo esc_attr($title); ?>"
                         data-author="<?php echo esc_attr($author); ?>"
                         data-buy="<?php echo esc_url($buy_link); ?>"
+                        data-reader="<?php echo esc_attr($reader_id); ?>"
                     >
                         <?php esc_html_e('Read Now', 'wrer'); ?>
                     </button>
@@ -122,14 +123,13 @@ if (is_array($first_book)) {
 <?php if ($first_epub && $reader_id !== '') : ?>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    if (typeof window.wrerInitReader === "function") {
-        window.wrerInitReader("<?php echo esc_url($first_epub); ?>", "<?php echo esc_attr($reader_id); ?>", {
-            bookId: "book-0",
-            title: "<?php echo esc_js(isset($first_book['title']) ? (string) $first_book['title'] : ''); ?>",
-            author: "<?php echo esc_js(isset($first_book['author']) ? (string) $first_book['author'] : ''); ?>",
-            buyLink: "<?php echo esc_url($first_buy_link); ?>",
-            autoOpen: false
-        });
+    const selector = '.wrer-read-btn[data-book-id="book-0"][data-reader="<?php echo esc_js($reader_id); ?>"]';
+    const firstButton = document.querySelector(selector);
+
+    if (firstButton && typeof window.wrerHandleReadButton === "function") {
+        window.wrerHandleReadButton(firstButton);
+    } else if (typeof window.wrerInitReader === "function") {
+        window.wrerInitReader("<?php echo esc_url($first_epub); ?>", "<?php echo esc_attr($reader_id); ?>");
     }
 });
 </script>
