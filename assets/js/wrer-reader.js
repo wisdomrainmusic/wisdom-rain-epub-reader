@@ -544,50 +544,80 @@
     containers.forEach(function (container) {
       const readerId = container.getAttribute("data-reader-id") || "";
       const buttons = container.querySelectorAll(".wrer-read-btn");
-      buttons.forEach(function (button, index) {
-        if (button.dataset.wrerBound === "1") {
-          return;
+      buttons.forEach(function (button) {
+        if (readerId) {
+          button.dataset.reader = readerId;
         }
-        button.dataset.wrerBound = "1";
-        button.addEventListener("click", function () {
-          const config = {
-            epub: button.getAttribute("data-epub") || "",
-            readerId: readerId,
-            bookId: button.getAttribute("data-book-id") || "book-" + index,
-            title: button.getAttribute("data-title") || "",
-            author: button.getAttribute("data-author") || "",
-            buyLink: button.getAttribute("data-buy") || "",
-          };
-
-          if (!config.epub) {
-            return;
-          }
-
-          wrerInitReader(config.epub, config.readerId, config);
-        });
       });
     });
   }
 
-  function wrerInitReader(epubUrl, readerId, options) {
-    const config = options && typeof options === "object" ? options : {};
-    config.epub = epubUrl;
-    config.readerId = readerId || config.readerId || state.readerId;
+  function wrerInitReader(epubUrl, readerId) {
+    if (!epubUrl) return;
 
-    if (!config.bookId) {
-      config.bookId = deriveBookId(epubUrl || "", config.title || "");
+    const container = document.getElementById("wrer-reader");
+    if (!container) return;
+
+    const book = ePub(epubUrl);
+    const rendition = book.renderTo(container, {
+      width: "100%",
+      height: "600px"
+    });
+
+    // Sayfa kaldığı yerden devam
+    const lastLocation = localStorage.getItem(`wrer_location_${readerId}`);
+    if (lastLocation) {
+      rendition.display(lastLocation);
+    } else {
+      rendition.display();
     }
 
-    ensureElements();
+    rendition.on("relocated", function(location) {
+      localStorage.setItem(`wrer_location_${readerId}`, location.start.cfi);
+    });
 
-    if (config.autoOpen === false) {
-      state.readerId = config.readerId || "";
-      state.bookId = config.bookId;
-      updateBuyLink(config.buyLink || "");
-      return;
+    state.readerArea = container;
+    state.readerId = readerId || state.readerId || "";
+    if (!state.bookId) {
+      state.bookId = deriveBookId(epubUrl || "", "");
     }
+    state.book = book;
+    state.rendition = rendition;
 
-    openBook(config);
+    book.ready
+      .then(function () {
+        if (book.locations && typeof book.locations.generate === "function") {
+          return book.locations.generate(1200);
+        }
+        return null;
+      })
+      .catch(function () {
+        // Ignore generation errors.
+      })
+      .then(function () {
+        const current = rendition.currentLocation();
+        if (current) {
+          state.lastLocation = current;
+          updateProgress(current);
+        }
+      });
+
+    rendition.on("rendered", function () {
+      const current = rendition.currentLocation();
+      if (current) {
+        state.lastLocation = current;
+        updateProgress(current);
+      }
+    });
+
+    rendition.on("relocated", function (location) {
+      if (!location || !location.start || !location.start.cfi) {
+        return;
+      }
+      state.lastLocation = location;
+      saveLocation(location.start.cfi);
+      updateProgress(location);
+    });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -623,5 +653,62 @@
     }
   });
 
+  function handleReadButton(btn) {
+    if (!btn) {
+      return;
+    }
+
+    const epubUrl = btn.dataset.epub;
+    let readerId = btn.dataset.reader || "";
+    if (!readerId) {
+      const wrapper = btn.closest(".wrer-reader-container");
+      if (wrapper && typeof wrapper.getAttribute === "function") {
+        readerId = wrapper.getAttribute("data-reader-id") || "";
+      }
+    }
+
+    if (!epubUrl) {
+      window.alert("EPUB URL not found.");
+      return;
+    }
+
+    window.console.log("Opening EPUB:", epubUrl);
+
+    ensureElements();
+    destroyRendition();
+
+    const bookId = btn.dataset.bookId || deriveBookId(epubUrl, btn.dataset.title || "");
+    state.readerId = readerId || state.readerId || "";
+    state.bookId = bookId;
+    state.pendingLocation = null;
+    state.lastLocation = null;
+    hideResume();
+
+    updateBuyLink(btn.dataset.buy || "");
+    setProgressText(TEXT.loading);
+
+    if (state.wrapper) {
+      state.wrapper.classList.remove(HIDDEN_CLASS);
+    }
+
+    const container = document.getElementById("wrer-reader");
+    if (container) {
+      container.innerHTML = '<div class="wrer-loading">Loading…</div>';
+    }
+
+    wrerInitReader(epubUrl, readerId);
+  }
+
+  // WRER Read Now Button Listener
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".wrer-read-btn");
+    if (!btn) {
+      return;
+    }
+
+    handleReadButton(btn);
+  });
+
   window.wrerInitReader = wrerInitReader;
+  window.wrerHandleReadButton = handleReadButton;
 })();
