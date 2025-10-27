@@ -1,72 +1,95 @@
 <?php
-/**
- * Manage WRER category administration pages.
- *
- * @package WisdomRain\EPUBReader
- */
+if (!defined('ABSPATH')) exit;
 
-if (!defined('ABSPATH')) {
-    exit;
-}
+class WRER_Admin_Categories {
 
-class WRER_Admin_Categories
-{
-    public function __construct()
-    {
-        add_action('admin_menu', [$this, 'register_menu']);
+    public function __construct() {
+        add_action('admin_menu', [$this, 'add_submenu']);
+        add_action('admin_post_wrer_add_category', [$this, 'add_category']);
+        add_action('admin_post_wrer_delete_category', [$this, 'delete_category']);
     }
 
-    public function register_menu(): void
-    {
+    public function add_submenu() {
         add_submenu_page(
             'wrer-overview',
-            __('Manage Categories', 'wrer'),
-            __('Manage Categories', 'wrer'),
+            'Manage Categories',
+            'Manage Categories',
             'manage_options',
             'wrer-manage-categories',
             [$this, 'render_page']
         );
     }
 
-    public function render_page(): void
-    {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You are not allowed to manage categories.', 'wrer'));
+    public function render_page() {
+        if (!current_user_can('manage_options')) return;
+        $categories = get_option('wrer_categories', []);
+        if (!is_array($categories)) $categories = [];
+
+        echo '<div class="wrap">';
+        echo '<h1>Manage Categories</h1>';
+        echo '<form method="post" action="' . admin_url('admin-post.php') . '">';
+        echo '<input type="hidden" name="action" value="wrer_add_category">';
+        echo '<input type="text" name="category_name" placeholder="Add new category" required> ';
+        submit_button('Add Category', 'primary', '', false);
+        echo '</form><hr>';
+
+        if (empty($categories)) {
+            echo '<p>No categories defined yet.</p>';
+        } else {
+            echo '<table class="widefat fixed striped"><thead>
+                    <tr><th>Name</th><th>Slug</th><th>Actions</th></tr>
+                  </thead><tbody>';
+            foreach ($categories as $cat) {
+                $name = isset($cat['name']) ? esc_html($cat['name']) : '';
+                $raw_slug = isset($cat['slug']) ? $cat['slug'] : '';
+                $slug = esc_html($raw_slug);
+                $delete_url = add_query_arg(
+                    ['action' => 'wrer_delete_category', 'slug' => $raw_slug],
+                    admin_url('admin-post.php')
+                );
+                echo '<tr>';
+                echo '<td>' . $name . '</td>';
+                echo '<td>' . $slug . '</td>';
+                echo '<td><a href="' . esc_url($delete_url) . '" onclick="return confirm(\'Delete this category?\')">Delete</a></td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
         }
+
+        echo '</div>';
+    }
+
+    public function add_category() {
+        if (!current_user_can('manage_options')) return;
+        $name = sanitize_text_field($_POST['category_name']);
+        $slug = sanitize_title($name);
 
         $categories = get_option('wrer_categories', []);
-        if (!is_array($categories)) {
-            $categories = [];
+        if (!is_array($categories)) $categories = [];
+
+        // Duplicate kontrolü
+        foreach ($categories as $c) {
+            if ($c['slug'] === $slug) {
+                wp_redirect(admin_url('admin.php?page=wrer-manage-categories&exists=1'));
+                exit;
+            }
         }
 
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html__('Manage Categories', 'wrer'); ?></h1>
-            <p><?php echo esc_html__('Category management tools will arrive in a future update.', 'wrer'); ?></p>
-            <?php if (!empty($categories)) : ?>
-                <table class="widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th><?php esc_html_e('Name', 'wrer'); ?></th>
-                            <th><?php esc_html_e('Slug', 'wrer'); ?></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    <?php foreach ($categories as $category) :
-                        $name = isset($category['name']) ? $category['name'] : '';
-                        $slug = isset($category['slug']) ? $category['slug'] : '';
-                        ?>
-                        <tr>
-                            <td><?php echo esc_html($name); ?></td>
-                            <td><?php echo esc_html($slug); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else : ?>
-                <p><?php echo esc_html__('No categories found yet.', 'wrer'); ?></p>
-            <?php endif; ?>
-        </div>
-        <?php
+        $categories[] = ['name' => $name, 'slug' => $slug];
+        update_option('wrer_categories', $categories);
+        wp_redirect(admin_url('admin.php?page=wrer-manage-categories&added=1'));
+        exit;
+    }
+
+    public function delete_category() {
+        if (!current_user_can('manage_options')) return;
+        $slug = sanitize_text_field($_GET['slug']);
+        $categories = get_option('wrer_categories', []);
+        $categories = array_filter($categories, fn($c) => $c['slug'] !== $slug);
+        update_option('wrer_categories', $categories);
+        wp_redirect(admin_url('admin.php?page=wrer-manage-categories&deleted=1'));
+        exit;
     }
 }
+
+new WRER_Admin_Categories();
