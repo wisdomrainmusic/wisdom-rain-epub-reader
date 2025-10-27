@@ -16,9 +16,17 @@ function wrer_register_reader_assets(): void
     );
 
     wp_register_script(
+        'wrer-epubjs',
+        'https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js',
+        [],
+        '0.3.93',
+        true
+    );
+
+    wp_register_script(
         'wrer-reader',
         WRER_URL . 'assets/js/wrer-reader.js',
-        [],
+        ['wrer-epubjs'],
         WRER_VERSION,
         true
     );
@@ -35,6 +43,7 @@ function wrer_enqueue_reader_assets(): void
     }
 
     wp_enqueue_style('wrer-reader');
+    wp_enqueue_script('wrer-epubjs');
     wp_enqueue_script('wrer-reader');
 }
 
